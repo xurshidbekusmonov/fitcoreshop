@@ -1,56 +1,79 @@
-'use client';
-
 import React from 'react';
-import { ShoppingCart } from 'lucide-react';
-import { useCartStore } from '@/lib/cartStore';
 
-export default function ProductCard({ item }: { item: any }) {
-  const addItem = useCartStore((state) => state.addItem);
+// 1. Mahsulot ma'lumotlarining turlari (TypeScript interfeysi)
+interface Product {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  weight?: string;
+  flavor?: string;
+  image_url: string;
+}
 
+export default function ProductCard({ 
+  product, 
+  onAddToCart 
+}: { 
+  product: Product; 
+  onAddToCart: (p: Product) => void;
+}) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition flex flex-col justify-between">
-      <div className="p-4 relative">
-        {item.badge && (
-          <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded">
-            {item.badge}
+    <div className="group relative flex flex-col justify-between bg-[#15181e] border border-neutral-800 hover:border-amber-500/60 rounded-xl p-4 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/10">
+      
+      {/* 2. Tepa qism: Kategoriya va Og'irlik (masalan: PROTEIN va 2.27 KG) */}
+      <div className="flex justify-between items-center text-xs text-neutral-400 font-semibold uppercase tracking-wider mb-2">
+        <span>{product.category}</span>
+        {product.weight && (
+          <span className="bg-neutral-850 border border-neutral-700/60 px-2 py-0.5 rounded text-neutral-300 text-[11px]">
+            {product.weight}
           </span>
         )}
-        <div className="h-44 w-full flex items-center justify-center my-2">
-          <img
-            src={item.image_url || 'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?w=500'}
-            alt={item.title}
-            className="h-full object-contain hover:scale-105 transition"
-          />
-        </div>
-        <span className="text-xs text-gray-400 font-medium">{item.brand}</span>
-        <h3 className="font-bold text-sm text-gray-800 line-clamp-2 mt-1 mb-2 hover:text-blue-600 cursor-pointer">
-          {item.title}
-        </h3>
-
-        <div className="bg-gray-50 p-2 rounded text-xs text-gray-600 flex justify-between mb-3 border border-gray-100">
-          <span>{item.flavor || 'Standart'}</span>
-          <span className="font-semibold">{item.weight_volume || '-'}</span>
-        </div>
       </div>
 
-      <div className="p-4 pt-0 border-t border-gray-100 mt-2">
-        <div className="my-2">
-          {item.old_price && (
-            <span className="text-xs text-gray-400 line-through block">
-              {Number(item.old_price).toLocaleString('uz-UZ')} so‘m
-            </span>
-          )}
-          <span className="text-base font-extrabold text-blue-700">
-            {Number(item.price).toLocaleString('uz-UZ')} so‘m
+      {/* 3. O'rta qism: Mahsulot bankasi rasmi (Hover bo'lganda biroz kattalashadi) */}
+      <div className="relative w-full h-56 my-2 flex items-center justify-center overflow-hidden rounded-lg bg-[#0e1015]">
+        <img
+          src={product.image_url || '/placeholder.png'}
+          alt={product.name}
+          className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
+
+      {/* 4. Matn qismi: Oltin yulduzchalar reytingi va mahsulot nomi */}
+      <div className="mt-3">
+        <div className="flex items-center space-x-1 text-amber-400 text-xs mb-1">
+          <span>★★★★★</span>
+          <span className="text-neutral-500 text-[11px]">(4.9)</span>
+        </div>
+        
+        {/* Nomi Optimum Nutrition uslubidagi katta va qalin harflarda */}
+        <h3 className="font-extrabold text-sm md:text-base text-white tracking-wide uppercase line-clamp-2 h-11">
+          {product.name}
+        </h3>
+        
+        {product.flavor && (
+          <p className="text-xs text-neutral-400 mt-1">Ta'mi: {product.flavor}</p>
+        )}
+      </div>
+
+      {/* 5. Pastki qism: Oltin rangli narx va "SAVATGA" tugmasi */}
+      <div className="mt-4 pt-3 border-t border-neutral-800/80 flex items-center justify-between">
+        <div>
+          <span className="text-xs text-neutral-400 block">Narxi</span>
+          <span className="text-lg font-black text-amber-400 tracking-tight">
+            {product.price.toLocaleString()} <span className="text-xs font-bold text-neutral-300">so'm</span>
           </span>
         </div>
+
         <button
-          onClick={() => addItem(item)}
-          className="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+          onClick={() => onAddToCart(product)}
+          className="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs md:text-sm px-4 py-2.5 rounded-lg uppercase tracking-wider transition-colors duration-200 active:scale-95 shadow-md shadow-amber-500/20 cursor-pointer"
         >
-          <ShoppingCart size={15} /> Savatchaga
+          Savatga
         </button>
       </div>
+
     </div>
   );
 }
