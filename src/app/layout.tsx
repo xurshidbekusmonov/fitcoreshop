@@ -14,10 +14,9 @@ export default function RootLayout({
   return (
     <html lang="uz" className="dark">
       <head>
-        {/* Tailwind CSS har qanday holatda ham 100% ishlashini ta'minlaydi */}
         <script src="https://cdn.tailwindcss.com"></script>
       </head>
-      <body className="bg-[#0b0f19] text-gray-100 antialiased selection:bg-amber-500 selection:text-black">
+      <body className="bg-[#0b0f19] text-gray-100 antialiased">
         {children}
       </body>
     </html>
