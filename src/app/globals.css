@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@source "../**/*.{js,ts,jsx,tsx,mdx}";
+
 @layer base {
   body {
     background-color: #0b0f19;
