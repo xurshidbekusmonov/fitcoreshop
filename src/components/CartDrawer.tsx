@@ -1,15 +1,17 @@
 'use client';
 
 import React from 'react';
-import { X, Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import { ShoppingCart, X, Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
 import { useCartStore } from '@/lib/cartStore';
 
-export default function CartDrawer({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
+export default function CartDrawer({ 
+  isOpen, 
+  onClose, 
+  onCheckout 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onCheckout: () => void; 
 }) {
   const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCartStore();
 
@@ -17,77 +19,51 @@ export default function CartDrawer({
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Orqa fon xiralashishi */}
-      <div
-        className="absolute inset-0 bg-black/50 transition-opacity"
-        onClick={onClose}
-      />
-
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-xs transition-opacity" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-xl flex flex-col">
-          {/* Sarlavha */}
-          <div className="p-4 border-b flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">Savatcha</h2>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
-            >
+        <div className="w-screen max-w-md bg-zinc-950 text-white shadow-2xl flex flex-col border-l border-zinc-800">
+          <div className="p-4 bg-black text-white flex items-center justify-between border-b border-[#D4AF37]/30">
+            <div>
+              <h2 className="text-base font-black uppercase tracking-wider text-white">Savatcha</h2>
+              <p className="text-[11px] text-[#D4AF37] font-semibold">{items.length} xil mahsulot</p>
+            </div>
+            <button onClick={onClose} className="p-1.5 text-zinc-400 hover:text-white rounded-md hover:bg-zinc-800 transition">
               <X size={20} />
             </button>
           </div>
 
-          {/* Mahsulotlar ro'yxati */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {items.length === 0 ? (
-              <div className="text-center py-16 text-gray-400">
-                <p className="text-base font-medium">Savatchangiz bo‘sh</p>
-                <p className="text-xs mt-1">O‘zingizga yoqqan tovarlarni qo‘shing</p>
+              <div className="text-center py-20 text-zinc-500">
+                <ShoppingCart size={44} className="mx-auto mb-3 opacity-25" />
+                <p className="text-sm font-bold text-zinc-300 uppercase tracking-wide">Savatchangiz bo‘sh</p>
+                <p className="text-xs mt-1 text-zinc-500">O‘zingizga yoqqan mahsulotlarni tanlang</p>
               </div>
             ) : (
               items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex gap-4 border-b border-gray-100 pb-4 items-center"
-                >
-                  <img
-                    src={item.image_url}
-                    alt={item.title}
-                    className="w-16 h-16 object-contain rounded-lg border p-1"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-sm text-gray-800 line-clamp-1">
-                      {item.title}
-                    </h4>
-                    {item.flavor && (
-                      <span className="text-xs text-gray-400 block">{item.flavor}</span>
-                    )}
-                    <span className="text-sm font-bold text-blue-600 mt-1 block">
+                <div key={item.id} className="flex gap-3 border-b border-zinc-800/60 pb-3 items-center">
+                  <div className="w-16 h-16 bg-zinc-900 rounded-xl p-1 flex items-center justify-center shrink-0 border border-zinc-800">
+                    <img src={item.image_url} alt={item.title} className="max-h-full object-contain" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-extrabold text-xs text-white uppercase truncate">{item.title}</h4>
+                    <span className="text-[11px] text-zinc-400 block mt-0.5">{(item as any).weight_volume || item.flavor}</span>
+                    <span className="text-xs font-black text-[#D4AF37] mt-1 block">
                       {item.price.toLocaleString('uz-UZ')} so‘m
                     </span>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center border rounded-lg bg-gray-50">
-                      <button
-                        onClick={() => updateQuantity(item.id, -1)}
-                        className="p-1 hover:bg-gray-200 rounded-l transition"
-                      >
-                        <Minus size={14} />
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex items-center border border-zinc-700 rounded-lg bg-zinc-900">
+                      <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:bg-zinc-800 text-zinc-300">
+                        <Minus size={12} />
                       </button>
-                      <span className="px-2 text-xs font-bold">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.id, 1)}
-                        className="p-1 hover:bg-gray-200 rounded-r transition"
-                      >
-                        <Plus size={14} />
+                      <span className="px-2 text-xs font-bold text-white">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:bg-zinc-800 text-zinc-300">
+                        <Plus size={12} />
                       </button>
                     </div>
-
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="text-red-400 hover:text-red-600 p-1"
-                    >
-                      <Trash2 size={16} />
+                    <button onClick={() => removeItem(item.id)} className="text-zinc-500 hover:text-red-500 p-1">
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
@@ -95,22 +71,21 @@ export default function CartDrawer({
             )}
           </div>
 
-          {/* Pastki hisob va buyurtma berish tugmasi */}
           {items.length > 0 && (
-            <div className="p-4 border-t bg-gray-50">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-gray-600 font-medium text-sm">Jami to‘lov:</span>
-                <span className="text-lg font-black text-gray-900">
-                  {totalPrice().toLocaleString('uz-UZ')} so‘m
+            <div className="p-4 border-t border-zinc-800 bg-black">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Jami to‘lov:</span>
+                <span className="text-xl font-black text-white">
+                  {totalPrice().toLocaleString('uz-UZ')} <span className="text-xs font-bold text-[#D4AF37]">so‘m</span>
                 </span>
               </div>
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 shadow-md">
-                Buyurtmani rasmiylashtirish <ArrowRight size={18} />
-              </button>
-              <button
-                onClick={clearCart}
-                className="w-full text-center text-xs text-gray-400 hover:text-red-500 mt-2 py-1 transition"
+              <button 
+                onClick={onCheckout}
+                className="w-full bg-[#D4AF37] hover:bg-[#C59B27] active:scale-98 text-black py-3 rounded-xl font-black text-xs tracking-wider uppercase transition flex items-center justify-center gap-2 shadow-md cursor-pointer"
               >
+                Buyurtmani tasdiqlash <ArrowRight size={16} />
+              </button>
+              <button onClick={clearCart} className="w-full text-center text-[11px] text-zinc-500 hover:text-red-400 mt-2 py-1">
                 Savatchani tozalash
               </button>
             </div>
