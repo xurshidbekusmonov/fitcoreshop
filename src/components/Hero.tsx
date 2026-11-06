@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Award, ChevronLeft, ChevronRight, ShoppingCart, Check, Flame } from 'lucide-react';
-import { useCartStore } from '@/lib/cartStore';
+import { Award, ChevronLeft, ChevronRight, ArrowRight, Flame } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface HeroProps {
@@ -62,10 +61,7 @@ export default function Hero({ onCategorySelect, onScrollToCatalog }: HeroProps)
   const [topProducts, setTopProducts] = useState(DEFAULT_TOP_PRODUCTS);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [addedId, setAddedId] = useState<string | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
-
-  const addItem = useCartStore((state) => state.addItem);
 
   // Bazadagi eng top 4 ta tovarlarni olib kelish (agar mavjud bo'lsa)
   useEffect(() => {
@@ -78,7 +74,6 @@ export default function Hero({ onCategorySelect, onScrollToCatalog }: HeroProps)
           .limit(4);
 
         if (!error && data && data.length > 0) {
-          // 4 taga yetkazish uchun default tovarlar bilan to'ldiramiz
           const combined = [
             ...data,
             ...DEFAULT_TOP_PRODUCTS.filter((d) => !data.some((p) => p.id === d.id)),
@@ -103,25 +98,17 @@ export default function Hero({ onCategorySelect, onScrollToCatalog }: HeroProps)
     setCurrentIndex((prev) => (prev - 1 + total) % total);
   }, [total]);
 
-  // Har 4 soniyada avtomatik keyingi slaydga o'tish (hover bo'lganda to'xtaydi)
+  // Talab 1: Karusel avtomatik har 3 soniyada (3000ms) keyingisiga o'tadi
   useEffect(() => {
     if (isPaused || total === 0) return;
     const interval = setInterval(() => {
       nextSlide();
-    }, 4500);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [isPaused, nextSlide, total]);
 
   const currentItem = topProducts[currentIndex] || topProducts[0];
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!currentItem) return;
-    addItem(currentItem);
-    setAddedId(currentItem.id);
-    setTimeout(() => setAddedId(null), 1800);
-  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.targetTouches[0].clientX);
@@ -183,7 +170,7 @@ export default function Hero({ onCategorySelect, onScrollToCatalog }: HeroProps)
           <div className="absolute w-72 h-72 bg-[#D4AF37]/20 rounded-full blur-3xl -top-10 -right-10 pointer-events-none" />
           
           <div 
-            className="relative z-10 w-full max-w-md bg-gradient-to-b from-zinc-900 via-zinc-950 to-black p-6 sm:p-7 rounded-3xl border border-zinc-800 shadow-2xl shadow-black/80 flex flex-col justify-between group select-none transition-all duration-300 hover:border-[#D4AF37]/40"
+            className="relative z-10 w-full max-w-md bg-gradient-to-b from-zinc-900 via-zinc-950 to-black p-6 sm:p-7 rounded-3xl border border-zinc-800 shadow-2xl shadow-black/80 flex flex-col justify-between group select-none transition-all duration-300 hover:border-[#D4AF37]/50"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             onTouchStart={handleTouchStart}
@@ -205,101 +192,96 @@ export default function Hero({ onCategorySelect, onScrollToCatalog }: HeroProps)
 
             {/* Navigatsiya tugmalari (Oldingi / Keyingi) */}
             <button
-              onClick={prevSlide}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                prevSlide();
+              }}
               aria-label="Oldingi mahsulot"
-              className="absolute left-2 top-[45%] -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/75 hover:bg-[#D4AF37] text-zinc-300 hover:text-black border border-zinc-800 hover:border-[#D4AF37] flex items-center justify-center transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-xs opacity-80 group-hover:opacity-100 hover:scale-110 active:scale-95"
+              className="absolute left-2 top-[45%] -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/80 hover:bg-[#D4AF37] text-zinc-300 hover:text-black border border-zinc-800 hover:border-[#D4AF37] flex items-center justify-center transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-xs opacity-80 group-hover:opacity-100 hover:scale-110 active:scale-95"
             >
               <ChevronLeft size={20} />
             </button>
 
             <button
-              onClick={nextSlide}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                nextSlide();
+              }}
               aria-label="Keyingi mahsulot"
-              className="absolute right-2 top-[45%] -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/75 hover:bg-[#D4AF37] text-zinc-300 hover:text-black border border-zinc-800 hover:border-[#D4AF37] flex items-center justify-center transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-xs opacity-80 group-hover:opacity-100 hover:scale-110 active:scale-95"
+              className="absolute right-2 top-[45%] -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/80 hover:bg-[#D4AF37] text-zinc-300 hover:text-black border border-zinc-800 hover:border-[#D4AF37] flex items-center justify-center transition-all duration-200 cursor-pointer shadow-lg backdrop-blur-xs opacity-80 group-hover:opacity-100 hover:scale-110 active:scale-95"
             >
               <ChevronRight size={20} />
             </button>
 
-            {/* Rasm qismi (Fade & Scale animatsiyasi bilan) */}
+            {/* Talab 1: Ustiga bosilsa to'g'ridan-to'g'ri o'sha tovarga olib tushadi */}
             <Link 
               href={`/product/${currentItem.id}`}
-              className="block relative h-56 sm:h-64 w-full my-2 bg-gradient-to-b from-zinc-950/80 to-zinc-900/40 rounded-2xl p-4 flex items-center justify-center border border-zinc-800/60 overflow-hidden cursor-pointer"
+              className="block group/link cursor-pointer"
             >
-              <img 
-                key={currentItem.id}
-                src={currentItem.image_url || 'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?w=500'} 
-                alt={currentItem.title} 
-                className="h-full max-w-full object-contain drop-shadow-[0_15px_20px_rgba(212,175,55,0.18)] transition-all duration-500 hover:scale-108 animate-in fade-in zoom-in-95"
-              />
-            </Link>
+              {/* Rasm qismi */}
+              <div className="relative h-56 sm:h-64 w-full my-2 bg-gradient-to-b from-zinc-950/80 to-zinc-900/40 rounded-2xl p-4 flex items-center justify-center border border-zinc-800/60 overflow-hidden">
+                <img 
+                  key={currentItem.id}
+                  src={currentItem.image_url || 'https://images.unsplash.com/photo-1579722821273-0f6c7d44362f?w=500'} 
+                  alt={currentItem.title} 
+                  className="h-full max-w-full object-contain drop-shadow-[0_15px_20px_rgba(212,175,55,0.18)] transition-all duration-500 group-hover/link:scale-108 animate-in fade-in zoom-in-95"
+                />
+              </div>
 
-            {/* Ma'lumot qismi */}
-            <div className="pt-2 text-center">
-              <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-widest block mb-1">
-                {currentItem.brand || 'OPTIMUM NUTRITION'}
-              </span>
+              {/* Ma'lumot qismi */}
+              <div className="pt-2 text-center">
+                <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-widest block mb-1">
+                  {currentItem.brand || 'OPTIMUM NUTRITION'}
+                </span>
 
-              <Link 
-                href={`/product/${currentItem.id}`}
-                className="block group/link"
-              >
                 <h3 className="font-extrabold text-sm sm:text-base uppercase text-white tracking-tight line-clamp-1 group-hover/link:text-[#D4AF37] transition">
                   {currentItem.title}
                 </h3>
-              </Link>
 
-              {/* Xususiyatlari */}
-              <div className="flex items-center justify-center gap-2 mt-1.5 text-[11px] text-zinc-400">
-                <span className="bg-zinc-800/80 px-2.5 py-0.5 rounded-md font-semibold text-zinc-300">
-                  {currentItem.flavor || 'Standart'}
-                </span>
-                <span>•</span>
-                <span className="font-bold text-zinc-300">
-                  {currentItem.weight_volume || '1 dona'}
-                </span>
-              </div>
-
-              {/* Narx va Savatcha tugmasi */}
-              <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-3">
-                <div className="text-left">
-                  {currentItem.old_price && currentItem.old_price > currentItem.price && (
-                    <span className="text-[11px] text-zinc-500 line-through block leading-tight font-semibold">
-                      {Number(currentItem.old_price).toLocaleString('uz-UZ')} so‘m
-                    </span>
-                  )}
-                  <span className="text-base sm:text-lg font-black text-white tracking-tight">
-                    {Number(currentItem.price).toLocaleString('uz-UZ')}{' '}
-                    <span className="text-[11px] font-bold text-[#D4AF37]">so‘m</span>
+                {/* Xususiyatlari */}
+                <div className="flex items-center justify-center gap-2 mt-1.5 text-[11px] text-zinc-400">
+                  <span className="bg-zinc-800/80 px-2.5 py-0.5 rounded-md font-semibold text-zinc-300">
+                    {currentItem.flavor || 'Standart'}
+                  </span>
+                  <span>•</span>
+                  <span className="font-bold text-zinc-300">
+                    {currentItem.weight_volume || '1 dona'}
                   </span>
                 </div>
 
-                <button
-                  onClick={handleAddToCart}
-                  className={`px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md active:scale-95 ${
-                    addedId === currentItem.id
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-[#D4AF37] hover:bg-[#C59B27] text-black'
-                  }`}
-                >
-                  {addedId === currentItem.id ? (
-                    <>
-                      <Check size={14} className="stroke-[3]" /> Qo‘shildi!
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart size={14} className="stroke-[2.5]" /> Savatchaga
-                    </>
-                  )}
-                </button>
+                {/* Narx va Ko'rish havolasi */}
+                <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-3">
+                  <div className="text-left">
+                    {currentItem.old_price && currentItem.old_price > currentItem.price && (
+                      <span className="text-[11px] text-zinc-500 line-through block leading-tight font-semibold">
+                        {Number(currentItem.old_price).toLocaleString('uz-UZ')} so‘m
+                      </span>
+                    )}
+                    <span className="text-base sm:text-lg font-black text-white tracking-tight">
+                      {Number(currentItem.price).toLocaleString('uz-UZ')}{' '}
+                      <span className="text-[11px] font-bold text-[#D4AF37]">so‘m</span>
+                    </span>
+                  </div>
+
+                  <span className="inline-flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 group-hover/link:border-[#D4AF37] text-zinc-300 group-hover/link:text-[#D4AF37] px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all">
+                    Batafsil <ArrowRight size={14} className="group-hover/link:translate-x-1 transition-transform" />
+                  </span>
+                </div>
               </div>
-            </div>
+            </Link>
 
             {/* Karusel nuqtalari (Dots / Indicators) */}
             <div className="flex items-center justify-center gap-1.5 mt-4 pt-1">
               {topProducts.map((p, idx) => (
                 <button
                   key={p.id || idx}
-                  onClick={() => setCurrentIndex(idx)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCurrentIndex(idx);
+                  }}
                   aria-label={`Slayd ${idx + 1}`}
                   className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                     currentIndex === idx

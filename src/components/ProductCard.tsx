@@ -1,12 +1,22 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart, Star, Plus, Minus } from 'lucide-react';
 import { useCartStore } from '@/lib/cartStore';
 
 export default function ProductCard({ item }: { item: any }) {
+  const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cartItem = mounted ? items.find((i) => i.id === item.id) : null;
+  const quantity = cartItem ? cartItem.quantity : 0;
 
   const discountPercent = item.old_price && item.old_price > item.price
     ? Math.round(((item.old_price - item.price) / item.old_price) * 100)
@@ -75,12 +85,35 @@ export default function ProductCard({ item }: { item: any }) {
           )}
         </div>
 
-        <button
-          onClick={() => addItem(item)}
-          className="w-full bg-[#D4AF37] hover:bg-[#C59B27] text-black py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98"
-        >
-          <ShoppingCart size={14} className="stroke-[2.5]" /> Savatchaga qo‘shish
-        </button>
+        {/* Talab 2: Agar tovar savatda bo'lsa - soni + chiqadi, 0 ga tushsa yana Savatchaga qo'shish tugmasi chiqadi */}
+        {quantity > 0 ? (
+          <div className="w-full flex items-center justify-between bg-zinc-950 border border-[#D4AF37] rounded-xl p-1 shadow-lg shadow-[#D4AF37]/10 animate-in fade-in">
+            <button
+              onClick={() => updateQuantity(item.id, -1)}
+              aria-label="Kamaytirish"
+              className="w-9 h-8 rounded-lg bg-zinc-900 hover:bg-[#D4AF37] text-zinc-200 hover:text-black flex items-center justify-center transition-all font-black cursor-pointer active:scale-90"
+            >
+              <Minus size={14} className="stroke-[3]" />
+            </button>
+            <span className="font-black text-sm text-[#D4AF37] px-3 select-none">
+              {quantity}
+            </span>
+            <button
+              onClick={() => updateQuantity(item.id, 1)}
+              aria-label="Ko‘paytirish"
+              className="w-9 h-8 rounded-lg bg-zinc-900 hover:bg-[#D4AF37] text-zinc-200 hover:text-black flex items-center justify-center transition-all font-black cursor-pointer active:scale-90"
+            >
+              <Plus size={14} className="stroke-[3]" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => addItem(item)}
+            className="w-full bg-[#D4AF37] hover:bg-[#C59B27] text-black py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98"
+          >
+            <ShoppingCart size={14} className="stroke-[2.5]" /> Savatchaga qo‘shish
+          </button>
+        )}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import React, { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useCartStore } from '@/lib/cartStore';
-import { ArrowLeft, ShoppingCart, ShieldCheck, Truck, RotateCcw, Check } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ShieldCheck, Truck, RotateCcw, Plus, Minus } from 'lucide-react';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -12,8 +12,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [added, setAdded] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cartItem = mounted ? items.find((i) => i.id === productId) : null;
+  const quantity = cartItem ? cartItem.quantity : 0;
 
   useEffect(() => {
     async function fetchProduct() {
@@ -50,12 +60,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       </div>
     );
   }
-
-  const handleAddToCart = () => {
-    addItem(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
@@ -131,26 +135,36 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
 
-            {/* Savatchaga qo'shish */}
+            {/* Savatchaga qo'shish yoki [-] soni [+] */}
             <div>
-              <button
-                onClick={handleAddToCart}
-                className={`w-full py-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md ${
-                  added
-                    ? 'bg-green-600 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white active:scale-98'
-                }`}
-              >
-                {added ? (
-                  <>
-                    <Check size={20} /> Savatchaga qo‘shildi!
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart size={20} /> Savatchaga qo‘shish
-                  </>
-                )}
-              </button>
+              {quantity > 0 ? (
+                <div className="w-full flex items-center justify-between bg-blue-50 border-2 border-blue-600 rounded-xl p-2 shadow-sm">
+                  <button
+                    onClick={() => updateQuantity(product.id, -1)}
+                    aria-label="Kamaytirish"
+                    className="w-12 h-10 rounded-lg bg-white border border-blue-200 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-colors font-black cursor-pointer shadow-xs text-blue-700 active:scale-95"
+                  >
+                    <Minus size={18} />
+                  </button>
+                  <span className="font-extrabold text-base text-blue-900 px-4">
+                    {quantity} dona savatda
+                  </span>
+                  <button
+                    onClick={() => updateQuantity(product.id, 1)}
+                    aria-label="Ko‘paytirish"
+                    className="w-12 h-10 rounded-lg bg-white border border-blue-200 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-colors font-black cursor-pointer shadow-xs text-blue-700 active:scale-95"
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => addItem(product)}
+                  className="w-full py-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md bg-blue-600 hover:bg-blue-700 text-white active:scale-98"
+                >
+                  <ShoppingCart size={20} /> Savatchaga qo‘shish
+                </button>
+              )}
 
               {/* Kafolat bloklari */}
               <div className="grid grid-cols-3 gap-3 mt-6 pt-6 border-t text-center text-xs text-gray-500">
