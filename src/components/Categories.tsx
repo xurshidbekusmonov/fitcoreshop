@@ -1,17 +1,35 @@
 'use client';
 
 import React from 'react';
+import {
+  Sparkles,
+  Milk,
+  Dumbbell,
+  Flame,
+  FlaskConical,
+  Zap,
+  Pill,
+  Target,
+  Shield,
+  type LucideIcon,
+} from 'lucide-react';
 
-export const CATEGORIES = [
-  { id: 'all', name: 'Barchasi', icon: '⚡' },
-  { id: 'Proteinlar', name: 'Proteinlar', icon: '🥛' },
-  { id: 'Geynerlar', name: 'Geynerlar', icon: '🟩' },
-  { id: 'Kreatin', name: 'Kreatin', icon: '💪' },
-  { id: 'BCAA & Aminolar', name: 'BCAA & Aminolar', icon: '💊' },
-  { id: 'Energiya & Pump', name: 'Energiya & Pump', icon: '🔥' },
-  { id: 'Vitaminlar', name: 'Vitaminlar', icon: '💊' },
-  { id: 'Yog\' erituvchilar', name: 'Yog\' erituvchilar', icon: '🎯' },
-  { id: 'Tiklanish & Kuch', name: 'Tiklanish & Kuch', icon: '🛡️' },
+export interface CategoryItem {
+  id: string;
+  name: string;
+  icon: LucideIcon;
+}
+
+export const CATEGORIES: CategoryItem[] = [
+  { id: 'all', name: 'Barchasi', icon: Sparkles },
+  { id: 'Proteinlar', name: 'Proteinlar', icon: Milk },
+  { id: 'Geynerlar', name: 'Geynerlar', icon: Dumbbell },
+  { id: 'Kreatin', name: 'Kreatin', icon: Flame },
+  { id: 'BCAA & Aminolar', name: 'BCAA & Aminolar', icon: FlaskConical },
+  { id: 'Energiya & Pump', name: 'Energiya & Pump', icon: Zap },
+  { id: 'Vitaminlar', name: 'Vitaminlar', icon: Pill },
+  { id: 'Yog\' erituvchilar', name: 'Yog\' erituvchilar', icon: Target },
+  { id: 'Tiklanish & Kuch', name: 'Tiklanish & Kuch', icon: Shield },
 ];
 
 interface CategoriesProps {
@@ -28,6 +46,7 @@ export default function Categories({ selectedCategory, setSelectedCategory }: Ca
         </p>
         <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
           {CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
             const isActive = selectedCategory === cat.name || (cat.id === 'all' && selectedCategory === 'Barchasi');
             return (
               <button
@@ -36,10 +55,13 @@ export default function Categories({ selectedCategory, setSelectedCategory }: Ca
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shrink-0 transition-all duration-200 cursor-pointer ${
                   isActive
                     ? 'bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20 scale-105'
-                    : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-800'
+                    : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700'
                 }`}
               >
-                <span>{cat.icon}</span>
+                <Icon
+                  size={15}
+                  className={isActive ? 'stroke-[2.5] text-black' : 'stroke-[2] text-[#D4AF37]'}
+                />
                 <span>{cat.name}</span>
               </button>
             );

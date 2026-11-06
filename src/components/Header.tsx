@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Search, ShieldAlert, X } from 'lucide-react';
+import { Search, ShieldAlert, X, ShieldCheck, Truck, Trophy, Sparkles } from 'lucide-react';
 import CartButton from './CartButton';
 
 interface HeaderProps {
@@ -20,20 +20,36 @@ export default function Header({
 }: HeaderProps) {
   return (
     <>
-      {/* Top Banner - Yuguruvchi qator */}
+      {/* Top Banner - Yuguruvchi qator (zamonaviy SVG belgilar bilan) */}
       <div className="bg-[#111111] text-[#D4AF37] text-[11px] py-2 border-b border-zinc-800/80 tracking-widest uppercase font-black overflow-hidden flex whitespace-nowrap">
         <div className="animate-marquee flex min-w-full shrink-0 items-center justify-around gap-12 pr-12">
-          <span>⚡ 100% Original Sifat Kafolati</span>
-          <span>🔥 Butun O‘zbekiston bo‘ylab yetkazib berish</span>
-          <span>🏆 Haqiqiy chempionlar tanlovi</span>
-          <span>💊 Top sifatli sport ozuqalari</span>
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck size={14} className="text-[#D4AF37] stroke-[2.5]" /> 100% Original Sifat Kafolati
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Truck size={14} className="text-[#D4AF37] stroke-[2.5]" /> Butun O‘zbekiston bo‘ylab yetkazib berish
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Trophy size={14} className="text-[#D4AF37] stroke-[2.5]" /> Haqiqiy chempionlar tanlovi
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Sparkles size={14} className="text-[#D4AF37] stroke-[2.5]" /> Top sifatli sport ozuqalari
+          </span>
         </div>
         {/* Uzluksiz silliq aylanishi uchun aynan xuddi shu qatorning dublikati */}
         <div className="animate-marquee flex min-w-full shrink-0 items-center justify-around gap-12 pr-12" aria-hidden="true">
-          <span>⚡ 100% Original Sifat Kafolati</span>
-          <span>🔥 Butun O‘zbekiston bo‘ylab yetkazib berish</span>
-          <span>🏆 Haqiqiy chempionlar tanlovi</span>
-          <span>💊 Top sifatli sport ozuqalari</span>
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck size={14} className="text-[#D4AF37] stroke-[2.5]" /> 100% Original Sifat Kafolati
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Truck size={14} className="text-[#D4AF37] stroke-[2.5]" /> Butun O‘zbekiston bo‘ylab yetkazib berish
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Trophy size={14} className="text-[#D4AF37] stroke-[2.5]" /> Haqiqiy chempionlar tanlovi
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Sparkles size={14} className="text-[#D4AF37] stroke-[2.5]" /> Top sifatli sport ozuqalari
+          </span>
         </div>
       </div>
 
