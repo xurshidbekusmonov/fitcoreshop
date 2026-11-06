@@ -21,7 +21,7 @@ export default function Home() {
   const [visibleCount, setVisibleCount] = useState(8);
 
   useEffect(() => {
-    setVisibleCount(8);
+    setVisibleCount(10);
   }, [selectedCategory, searchQuery]);
 
   useEffect(() => {
@@ -100,8 +100,8 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((n) => (
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+              {[1, 2, 3, 4, 5].map((n) => (
               <div key={n} className="bg-zinc-900/50 border border-zinc-800 h-80 rounded-3xl animate-pulse" />
             ))}
           </div>
@@ -112,7 +112,7 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               {displayedProducts.map((item) => (
                 <ProductCard key={item.id} item={item} />
               ))}
@@ -121,7 +121,7 @@ export default function Home() {
             {visibleCount < filteredProducts.length && (
               <div className="text-center mt-12">
                 <button
-                  onClick={() => setVisibleCount((prev) => prev + 8)}
+                  onClick={() => setVisibleCount((prev) => prev + 10)}
                   className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-xl transition-all cursor-pointer shadow-lg"
                 >
                   Ko‘proq ko‘rsatish

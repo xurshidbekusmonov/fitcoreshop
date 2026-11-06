@@ -20,19 +20,20 @@ export default function Header({
 }: HeaderProps) {
   return (
     <>
-      {/* Top Banner */}
-      <div className="bg-[#111111] text-zinc-300 text-[11px] py-2 px-4 border-b border-zinc-800/80 tracking-wider uppercase font-semibold">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse"></span>
-            <span>100% Original Sifat Kafolati • Butun O‘zbekiston bo‘ylab yetkazib berish</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="hidden md:inline text-zinc-400">09:00 - 20:00</span>
-            <a href="tel:+998781130219" className="flex items-center gap-1.5 text-[#D4AF37] hover:text-white transition font-bold">
-              +998 78 113 02 19
-            </a>
-          </div>
+      {/* Top Banner - Yuguruvchi qator */}
+      <div className="bg-[#111111] text-[#D4AF37] text-[11px] py-2 border-b border-zinc-800/80 tracking-widest uppercase font-black overflow-hidden flex whitespace-nowrap">
+        <div className="animate-marquee flex min-w-full shrink-0 items-center justify-around gap-12 pr-12">
+          <span>⚡ 100% Original Sifat Kafolati</span>
+          <span>🔥 Butun O‘zbekiston bo‘ylab yetkazib berish</span>
+          <span>🏆 Haqiqiy chempionlar tanlovi</span>
+          <span>💊 Top sifatli sport ozuqalari</span>
+        </div>
+        {/* Uzluksiz silliq aylanishi uchun aynan xuddi shu qatorning dublikati */}
+        <div className="animate-marquee flex min-w-full shrink-0 items-center justify-around gap-12 pr-12" aria-hidden="true">
+          <span>⚡ 100% Original Sifat Kafolati</span>
+          <span>🔥 Butun O‘zbekiston bo‘ylab yetkazib berish</span>
+          <span>🏆 Haqiqiy chempionlar tanlovi</span>
+          <span>💊 Top sifatli sport ozuqalari</span>
         </div>
       </div>
 
