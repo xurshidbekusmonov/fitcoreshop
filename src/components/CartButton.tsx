@@ -5,27 +5,35 @@ import { ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/lib/cartStore';
 
 export default function CartButton({ onOpen }: { onOpen: () => void }) {
-  const totalCount = useCartStore((state) => state.totalCount);
+  // items massiviga to'g'ridan-to'g'ri obuna bo'lamiz, shunda tovar qo'shilishi bilan avtomatik qayta chiziladi
+  const items = useCartStore((state) => state.items);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const count = mounted ? totalCount() : 0;
+  const totalQuantity = mounted
+    ? items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
+    : 0;
 
   return (
     <button
       onClick={onOpen}
-      className="relative flex items-center gap-2 bg-[#D4AF37] hover:bg-[#C59B27] text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 shadow-md active:scale-95 cursor-pointer"
+      className="relative flex items-center gap-2 bg-[#D4AF37] hover:bg-[#C59B27] text-black px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 shadow-md active:scale-95 cursor-pointer"
     >
-      <ShoppingCart size={16} className="text-black stroke-[2.5]" />
+      <div className="relative flex items-center justify-center">
+        <ShoppingCart size={17} className="text-black stroke-[2.5]" />
+      </div>
       <span className="hidden sm:inline">Savatcha</span>
 
-      {/* Talab 2: Yuqoridagi savatcha bo'limida nechta tovar qo'shilgani yuqorida QIZIL bilan bilinib turishi */}
-      {count > 0 && (
-        <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[11px] font-black min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center shadow-lg shadow-red-600/50 border-2 border-black animate-in zoom-in-75">
-          {count}
+      {/* Savatchaga tovar qo'shilsa yuqorisida qizil belgicha (soni bilan) */}
+      {totalQuantity > 0 && (
+        <span className="absolute -top-2.5 -right-2.5 z-20 flex items-center justify-center">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+          <span className="relative inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-600 text-white text-[11px] font-black border-2 border-black shadow-lg shadow-red-600/60 leading-none">
+            {totalQuantity}
+          </span>
         </span>
       )}
     </button>
