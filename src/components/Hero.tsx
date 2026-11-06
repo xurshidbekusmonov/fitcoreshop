@@ -20,7 +20,7 @@ export default function Hero({ onCategorySelect, onScrollToCatalog }: HeroProps)
             <Award size={14} /> Haqiqiy Standart
           </div>
           <h1 className="text-4xl sm:text-6xl font-black italic uppercase tracking-tight leading-none">
-            GOLD STANDARD <br />
+            GOLD STANDART <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-amber-600 not-italic">
               NATIJAGA ERISHING
             </span>
