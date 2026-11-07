@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { X, CheckCircle2 } from "lucide-react";
+import { X, CheckCircle2, MapPin } from "lucide-react";
 import { formatPrice } from "@/lib/formatPrice";
 import { supabase } from "@/lib/supabase";
 import { useDialog } from "@/lib/useDialog";
@@ -171,6 +171,20 @@ export default function CheckoutModal({
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-[#D4AF37] transition"
                 />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const query = address.trim();
+                    const url = query
+                      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+                      : "https://www.google.com/maps";
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                  className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-[#D4AF37] hover:text-[#f3cc4a] transition cursor-pointer"
+                >
+                  <MapPin size={13} />
+                  <span>{t("showOnMap")}</span>
+                </button>
               </div>
 
               <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 flex justify-between items-center text-xs">
