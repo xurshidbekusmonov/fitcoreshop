@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "FITCORESHOP - Original Sport Ozuqalari",
-  description: "100% Original Sifat Kafolati. O'zbekiston bo'ylab yetkazib berish.",
+  description:
+    "100% Original Sifat Kafolati. O'zbekiston bo'ylab yetkazib berish.",
 };
 
 export default function RootLayout({
@@ -12,13 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="uz" className="dark">
-      <head>
-        <script src="https://cdn.tailwindcss.com"></script>
-      </head>
-      <body className="bg-[#0b0f19] text-gray-100 antialiased">
-        {children}
-      </body>
+    <html lang="uz">
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

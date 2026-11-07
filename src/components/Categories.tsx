@@ -13,6 +13,7 @@ import {
   Shield,
   type LucideIcon,
 } from 'lucide-react';
+import { useI18n } from '@/lib/useI18n';
 
 export interface CategoryItem {
   id: string;
@@ -38,12 +39,11 @@ interface CategoriesProps {
 }
 
 export default function Categories({ selectedCategory, setSelectedCategory }: CategoriesProps) {
+  const { tCategory } = useI18n();
+
   return (
     <section className="bg-black py-8 px-4 sm:px-6 border-b border-zinc-900 sticky top-[73px] z-30 backdrop-blur-md bg-black/90">
       <div className="max-w-7xl mx-auto">
-        <p className="text-[11px] font-black uppercase tracking-widest text-zinc-400 mb-3">
-          Toifalar bo‘yicha tanlang
-        </p>
         <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
@@ -62,7 +62,7 @@ export default function Categories({ selectedCategory, setSelectedCategory }: Ca
                   size={15}
                   className={isActive ? 'stroke-[2.5] text-black' : 'stroke-[2] text-[#D4AF37]'}
                 />
-                <span>{cat.name}</span>
+                <span>{tCategory(cat.name)}</span>
               </button>
             );
           })}

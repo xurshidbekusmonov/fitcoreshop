@@ -1,0 +1,4 @@
+.browser-check
+artifacts
+.git
+node_modules

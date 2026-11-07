@@ -3,11 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/lib/cartStore';
+import { useI18n } from '@/lib/useI18n';
 
 export default function CartButton({ onOpen }: { onOpen: () => void }) {
-  // items massiviga to'g'ridan-to'g'ri obuna bo'lamiz, shunda tovar qo'shilishi bilan avtomatik qayta chiziladi
   const items = useCartStore((state) => state.items);
   const [mounted, setMounted] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     setMounted(true);
@@ -25,7 +26,7 @@ export default function CartButton({ onOpen }: { onOpen: () => void }) {
       <div className="relative flex items-center justify-center">
         <ShoppingCart size={17} className="text-black stroke-[2.5]" />
       </div>
-      <span className="hidden sm:inline">Savatcha</span>
+      <span className="hidden sm:inline">{t("cart")}</span>
 
       {/* Savatchaga tovar qo'shilsa yuqorisida qizil belgicha (soni bilan) */}
       {totalQuantity > 0 && (
