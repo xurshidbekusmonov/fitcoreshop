@@ -24,7 +24,7 @@ export default function CheckoutModal({
   const [address, setAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMapPicker, setShowMapPicker] = useState(false);
-
+  const [isSuccess, setIsSuccess] = useState(false);
   const [formError, setFormError] = useState("");
 
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -41,7 +41,6 @@ export default function CheckoutModal({
     }
 
     setIsSubmitting(true);
-
     try {
       const { error: dbError } = await supabase.from("orders").insert([
         {
@@ -53,9 +52,7 @@ export default function CheckoutModal({
         },
       ]);
 
-      if (dbError) {
-        console.warn("Baza xatoligi:", dbError.message);
-      }
+      if (dbError) console.warn("Baza xatoligi:", dbError.message);
 
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -69,9 +66,7 @@ export default function CheckoutModal({
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Telegram bildirishnomasi yetib bormadi");
-      }
+      if (!res.ok) throw new Error("Telegram bildirishnomasi yetib bormadi");
 
       setIsSuccess(true);
       clearCart();
@@ -99,34 +94,33 @@ export default function CheckoutModal({
           <X size={18} />
         </button>
 
-{isSuccess ? (
-  <div className="text-center py-6">
-    <CheckCircle2 size={48} className="text-[#D4AF37] mx-auto mb-3" />
-    <h3 className="text-lg font-black uppercase text-white mb-1">{t("orderSuccessTitle")}</h3>
-    <p className="text-xs text-zinc-400 mb-6">{t("orderSuccessDesc")}</p>
-    <button
-      onClick={() => {
-        setIsSuccess(false);
-        onClose();
-      }}
-      className="bg-[#D4AF37] hover:bg-[#C59B27] text-black font-black px-6 py-2.5 rounded-xl text-xs uppercase cursor-pointer"
-    >
-      {t("backToStore")}
-    </button>
-  </div>
-) : (
-  <div>
-    <h3 className="text-base font-black uppercase tracking-tight text-white mb-1">{t("checkoutTitle")}</h3>
-    <p className="text-xs text-zinc-400 mb-4">{t("checkoutSubtitle")}</p>
-    {formError && (
-      <p role="alert" className="text-red-700 text-sm mb-3">{formError}</p>
-    )}
-    <form onSubmit={handleSubmit} className="space-y-3.5">
-              <p role="alert" className="text-red-700 text-sm mb-3">
-                {formError}
-              </p>
+        {/* Success message */}
+        {isSuccess ? (
+          <div className="text-center py-6">
+            <CheckCircle2 size={48} className="text-[#D4AF37] mx-auto mb-3" />
+            <h3 className="text-lg font-black uppercase text-white mb-1">{t("orderSuccessTitle")}</h3>
+            <p className="text-xs text-zinc-400 mb-6">{t("orderSuccessDesc")}</p>
+            <button
+              onClick={() => {
+                setIsSuccess(false);
+                onClose();
+              }}
+              className="bg-[#D4AF37] hover:bg-[#C59B27] text-black font-black px-6 py-2.5 rounded-xl text-xs uppercase cursor-pointer"
+            >
+              {t("backToStore")}
+            </button>
+          </div>
+        ) : (
+          <div>
+            <h3 className="text-base font-black uppercase tracking-tight text-white mb-1">{t("checkoutTitle")}</h3>
+            <p className="text-xs text-zinc-400 mb-4">{t("checkoutSubtitle")}</p>
+
+            {formError && (
+              <p role="alert" className="text-red-700 text-sm mb-3">{formError}</p>
             )}
+
             <form onSubmit={handleSubmit} className="space-y-3.5">
+              {/* Name */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
                   {t("nameLabel")}
@@ -139,8 +133,9 @@ export default function CheckoutModal({
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-[#D4AF37] transition"
                 />
-              </form>
+              </div>
 
+              {/* Phone */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
                   {t("phoneLabel")}
@@ -153,8 +148,9 @@ export default function CheckoutModal({
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-[#D4AF37] transition"
                 />
-              </form>
+              </div>
 
+              {/* Address (optional) */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
                   {t("addressLabel")}
@@ -174,17 +170,15 @@ export default function CheckoutModal({
                   <MapPin size={13} />
                   <span>{t("showOnMap")}</span>
                 </button>
-              </form>
+              </div>
 
+              {/* Total sum */}
               <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 flex justify-between items-center text-xs">
-                <span className="text-zinc-400 font-bold uppercase tracking-wide">
-                  {t("totalSum")}
-                </span>
-                <span className="font-black text-[#D4AF37] text-sm">
-                  {formatPrice(totalPrice())} {t("currency")}
-                </span>
-              </form>
+                <span className="text-zinc-400 font-bold uppercase tracking-wide">{t("totalSum")}</span>
+                <span className="font-black text-[#D4AF37] text-sm">{formatPrice(totalPrice())} {t("currency")}</span>
+              </div>
 
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={isSubmitting || !items.length}
@@ -192,16 +186,19 @@ export default function CheckoutModal({
               >
                 {isSubmitting ? t("submittingOrder") : t("submitOrder")}
               </button>
+
+              {/* Map picker modal */}
               {showMapPicker && (
-              <MapPicker
-                onSelect={(addr) => {
-                  setAddress(addr);
-                  setShowMapPicker(false);
-                }}
-                onClose={() => setShowMapPicker(false)}
-              />
-            )}
-          </form>
+                <MapPicker
+                  onSelect={(addr) => {
+                    setAddress(addr);
+                    setShowMapPicker(false);
+                  }}
+                  onClose={() => setShowMapPicker(false)}
+                />
+              )}
+            </form>
+          </div>
         )}
       </div>
     </div>
