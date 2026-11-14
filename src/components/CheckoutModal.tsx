@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { X, CheckCircle2, MapPin } from "lucide-react";
-import MapPicker from "./MapPicker";
+
+const MapPicker = dynamic(() => import("./MapPicker"), { ssr: false });
 import { formatPrice } from "@/lib/formatPrice";
 import { supabase } from "@/lib/supabase";
 import { useDialog } from "@/lib/useDialog";
@@ -49,6 +51,7 @@ export default function CheckoutModal({
           shipping_address: address,
           total_amount: totalPrice(),
           items: items,
+          created_at: new Date().toISOString(),
         },
       ]);
 

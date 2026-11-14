@@ -18,6 +18,7 @@ import {
   KeyRound,
   UserCheck,
   Check,
+  Clock,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -726,10 +727,25 @@ export default function AdminDashboard() {
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                       <div>
-                        <span className="text-xs font-bold text-gray-400">
-                          Buyurtma #{order.id}
-                        </span>
-                        <h4 className="font-bold text-base text-gray-900 mt-0.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-gray-400">
+                            Buyurtma #{order.id}
+                          </span>
+                          {order.created_at && (
+                            <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md text-[11px] font-semibold border border-blue-100">
+                              <Clock size={12} className="text-blue-500" />
+                              {new Date(order.created_at).toLocaleString("uz-UZ", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                timeZone: "Asia/Tashkent",
+                              })}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-bold text-base text-gray-900 mt-1">
                           {order.customer_name}
                         </h4>
                       </div>
