@@ -32,6 +32,28 @@ const CATEGORIES = [
   "Tiklanish & Kuch",
 ];
 
+function formatOrderDateTime(dateStr?: string) {
+  if (!dateStr) return "Vaqt ko‘rsatilmagan";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const datePart = d.toLocaleDateString("uz-UZ", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      timeZone: "Asia/Tashkent",
+    });
+    const timePart = d.toLocaleTimeString("uz-UZ", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Tashkent",
+    });
+    return `${datePart}, ${timePart}`;
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loginInput, setLoginInput] = useState("");
@@ -731,19 +753,10 @@ export default function AdminDashboard() {
                           <span className="text-xs font-bold text-gray-400">
                             Buyurtma #{order.id}
                           </span>
-                          {order.created_at && (
-                            <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md text-[11px] font-semibold border border-blue-100">
-                              <Clock size={12} className="text-blue-500" />
-                              {new Date(order.created_at).toLocaleString("uz-UZ", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                timeZone: "Asia/Tashkent",
-                              })}
-                            </span>
-                          )}
+                          <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-xs font-semibold border border-blue-200">
+                            <Clock size={13} className="text-blue-600" />
+                            {formatOrderDateTime(order.created_at)}
+                          </span>
                         </div>
                         <h4 className="font-bold text-base text-gray-900 mt-1">
                           {order.customer_name}
@@ -753,23 +766,32 @@ export default function AdminDashboard() {
                         <span className="text-xs text-gray-400 block">
                           Jami summa:
                         </span>
-                        <span className="text-lg font-extrabold text-blue-700">
+                        <span className="text-lg font-extrabold text-blue-700 block">
                           {Number(order.total_amount).toLocaleString("uz-UZ")}{" "}
                           so‘m
+                        </span>
+                        <span className="text-xs text-gray-400 sm:block hidden mt-0.5">
+                          {formatOrderDateTime(order.created_at)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-600 mb-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-gray-600 mb-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
                       <div className="flex items-center gap-2">
-                        <Phone size={14} className="text-gray-400" />
+                        <Phone size={14} className="text-gray-400 shrink-0" />
                         <span className="font-semibold text-gray-800">
                           {order.customer_phone}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <MapPin size={14} className="text-gray-400" />
-                        <span>{order.shipping_address}</span>
+                        <MapPin size={14} className="text-gray-400 shrink-0" />
+                        <span className="truncate">{order.shipping_address || "Manzil ko‘rsatilmagan"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock size={14} className="text-gray-400 shrink-0" />
+                        <span className="text-gray-700 font-medium">
+                          {formatOrderDateTime(order.created_at)}
+                        </span>
                       </div>
                     </div>
 
