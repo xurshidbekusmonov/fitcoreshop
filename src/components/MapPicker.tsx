@@ -65,9 +65,10 @@ export default function MapPicker({ initialAddress, onSelect, onClose }: MapPick
   }, [position]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-zinc-950 text-white w-full max-w-2xl rounded-2xl p-4 shadow-xl relative border border-zinc-800">
+    <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto overscroll-contain bg-black/70 p-4">
+      <div className="my-auto shrink-0 bg-zinc-950 text-white w-full max-w-2xl rounded-2xl p-4 shadow-xl relative border border-zinc-800">
         <button
+          type="button"
           aria-label="Close"
           onClick={onClose}
           className="absolute top-3 right-3 text-zinc-400 hover:text-white"
@@ -75,7 +76,7 @@ export default function MapPicker({ initialAddress, onSelect, onClose }: MapPick
           ✕
         </button>
         <h3 className="text-lg font-bold mb-2">{"Tanlang joyni (Click on map)"}</h3>
-        <div className="h-96 mb-4">
+        <div className="h-[min(24rem,48dvh)] mb-4">
           <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -94,15 +95,16 @@ export default function MapPicker({ initialAddress, onSelect, onClose }: MapPick
         )}
         <div className="flex justify-end space-x-2">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded"
           >
             {"Bekor qilish"}
           </button>
           <button
+            type="button"
             onClick={() => {
               onSelect(address);
-              onClose();
             }}
             disabled={!address}
             className="px-4 py-2 bg-[#D4AF37] hover:bg-[#C59B27] text-black font-bold rounded disabled:opacity-50"

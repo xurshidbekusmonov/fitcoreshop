@@ -119,9 +119,7 @@ export default function Home() {
   ]);
 
   const scroll = () =>
-    document
-      .getElementById("catalog-section")
-      ?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("catalog-section")?.scrollIntoView();
 
   const reset = () => {
     setSelectedCategory("Barchasi");

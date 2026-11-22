@@ -6,9 +6,6 @@ const nextConfig: NextConfig = {
       '*.css': { loaders: ['@tailwindcss/turbopack'], type: 'css' },
     },
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
     remotePatterns: [
       {

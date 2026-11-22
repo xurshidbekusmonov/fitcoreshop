@@ -134,6 +134,9 @@ export const translations = {
     orderSuccessDesc: "Menejerlarimiz tez orada siz bilan bog‘lanishadi.",
     backToStore: "Do‘konga qaytish",
     orderError: "Buyurtmani yuborib bo‘lmadi.",
+    orderContactInvalid: "Ismingiz va telefon raqamingizni tekshiring.",
+    orderPriceChanged: "Narx o‘zgargan. Mahsulotlarni savatdan olib tashlab, qayta qo‘shing.",
+    orderProductUnavailable: "Savatdagi mahsulotlardan biri so‘ralgan miqdorda mavjud emas.",
   },
   ru: {
     // Header & Navigation
@@ -268,6 +271,9 @@ export const translations = {
     orderSuccessDesc: "Наши менеджеры свяжутся с вами в ближайшее время.",
     backToStore: "Вернуться в магазин",
     orderError: "Не удалось отправить заказ.",
+    orderContactInvalid: "Проверьте имя и номер телефона.",
+    orderPriceChanged: "Цена изменилась. Удалите товары из корзины и добавьте их заново.",
+    orderProductUnavailable: "Одного из товаров в корзине нет в нужном количестве.",
   },
 };
 

@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useId, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { X, CheckCircle2, MapPin } from "lucide-react";
 
 const MapPicker = dynamic(() => import("./MapPicker"), { ssr: false });
 import { formatPrice } from "@/lib/formatPrice";
-import { supabase } from "@/lib/supabase";
 import { useDialog } from "@/lib/useDialog";
 import { useCartStore } from "@/lib/cartStore";
 import { useI18n } from "@/lib/useI18n";
@@ -28,6 +27,8 @@ export default function CheckoutModal({
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [formError, setFormError] = useState("");
+  const formId = useId();
+  const pendingOrder = useRef<{ body: string; id: string } | null>(null);
 
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialog(isOpen, onClose, dialogRef);
@@ -37,57 +38,57 @@ export default function CheckoutModal({
     e.preventDefault();
     if (isSubmitting || !items.length) return;
     setFormError("");
-    if (!name || phone.length < 9) {
-      alert(t("fillAllFields"));
+    if (!name.trim() || !/^\d{9,15}$/.test(phone.replace(/\D/g, ""))) {
+      setFormError(t("orderContactInvalid"));
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { error: dbError } = await supabase.from("orders").insert([
-        {
-          customer_name: name,
-          customer_phone: phone,
-          shipping_address: address,
-          total_amount: totalPrice(),
-          items: items,
-          created_at: new Date().toISOString(),
-        },
-      ]);
-
-      if (dbError) console.warn("Baza xatoligi:", dbError.message);
+      const order = {
+        name: name.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
+        items: items.map(({ id, quantity }) => ({ id, quantity })),
+        expectedTotal: totalPrice(),
+      };
+      const body = JSON.stringify(order);
+      if (pendingOrder.current?.body !== body) {
+        pendingOrder.current = { body, id: crypto.randomUUID() };
+      }
 
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          phone,
-          address,
-          items,
-          totalAmount: totalPrice(),
-        }),
+        body: JSON.stringify({ ...order, requestId: pendingOrder.current.id }),
       });
 
-      if (!res.ok) throw new Error("Telegram bildirishnomasi yetib bormadi");
+      if (!res.ok) {
+        const result = await res.json().catch(() => null);
+        if (result?.code === "PRICE_CHANGED") setFormError(t("orderPriceChanged"));
+        else if (result?.code === "PRODUCT_UNAVAILABLE") setFormError(t("orderProductUnavailable"));
+        else setFormError(t("orderError"));
+        return;
+      }
 
+      pendingOrder.current = null;
       setIsSuccess(true);
       clearCart();
-    } catch (err: any) {
-      setFormError(`${t("orderError")} ${err.message}`);
+    } catch {
+      setFormError(t("orderError"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="commerce-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
+    <div className="commerce-overlay fixed inset-0 z-50 flex justify-center overflow-y-auto overscroll-contain p-4 bg-black/80 backdrop-blur-xs">
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={t("checkoutTitle")}
-        className="bg-zinc-950 text-white w-full max-w-md rounded-2xl p-6 shadow-2xl relative border border-zinc-800"
+        className="my-auto shrink-0 bg-zinc-950 text-white w-full max-w-md rounded-2xl p-6 shadow-2xl relative border border-zinc-800"
       >
         <button
           aria-label="Close"
@@ -125,11 +126,13 @@ export default function CheckoutModal({
             <form onSubmit={handleSubmit} className="space-y-3.5">
               {/* Name */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
+                <label htmlFor={`${formId}-name`} className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
                   {t("nameLabel")}
                 </label>
                 <input
+                  id={`${formId}-name`}
                   type="text"
+                  autoComplete="name"
                   required
                   placeholder={t("namePlaceholder")}
                   value={name}
@@ -140,11 +143,13 @@ export default function CheckoutModal({
 
               {/* Phone */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
+                <label htmlFor={`${formId}-phone`} className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
                   {t("phoneLabel")}
                 </label>
                 <input
-                  type="text"
+                  id={`${formId}-phone`}
+                  type="tel"
+                  autoComplete="tel"
                   required
                   placeholder="+998 90 123 45 67"
                   value={phone}
@@ -155,10 +160,12 @@ export default function CheckoutModal({
 
               {/* Address (optional) */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
+                <label htmlFor={`${formId}-address`} className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
                   {t("addressLabel")}
                 </label>
                 <textarea
+                  id={`${formId}-address`}
+                  autoComplete="street-address"
                   rows={2}
                   placeholder={t("addressPlaceholder")}
                   value={address}

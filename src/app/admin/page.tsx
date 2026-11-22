@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { PRODUCT_GOALS, productGoal } from "@/lib/productGoals";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import {
   Package,
   ShoppingBag,
@@ -32,7 +31,38 @@ const CATEGORIES = [
   "Tiklanish & Kuch",
 ];
 
-function formatOrderDateTime(dateStr?: string) {
+type StoreId = string | number;
+type AdminProduct = {
+  id: StoreId;
+  title: string;
+  brand?: string;
+  goal?: string | null;
+  category?: string;
+  price: number | string;
+  old_price?: number | string | null;
+  flavor?: string;
+  weight_volume?: string;
+  badge?: string | null;
+  image_url?: string;
+};
+type AdminOrder = {
+  id: StoreId;
+  customer_name: string;
+  customer_phone: string;
+  shipping_address: string | null;
+  total_amount: number | string;
+  created_at: string | null;
+  items: { title: string; quantity: number; price: number }[] | null;
+};
+
+async function adminRequest(path: string, init?: RequestInit) {
+  const res = await fetch("/api/admin/" + path, init);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}
+
+function formatOrderDateTime(dateStr?: string | null) {
   if (!dateStr) return "Vaqt ko‘rsatilmagan";
   try {
     const d = new Date(dateStr);
@@ -62,15 +92,17 @@ export default function AdminDashboard() {
 
   const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
 
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [goalColumnAvailable,setGoalColumnAvailable]=useState(false);
+  const [productError, setProductError] = useState("");
+  const [goalColumnAvailable, setGoalColumnAvailable] = useState(false);
 
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [orderError, setOrderError] = useState("");
 
   // Tahrirlanayotgan tovar ID si (agar null bo'lsa yangi tovar qo'shish rejimida bo'ladi)
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<StoreId | null>(null);
 
   // Tovar formasi
   const [formData, setFormData] = useState({
@@ -132,30 +164,37 @@ export default function AdminDashboard() {
   const handleLogout = async () => {
     await fetch("/api/admin/session", { method: "DELETE" });
     setIsAuthenticated(false);
+    setProducts([]);
+    setOrders([]);
     setLoginInput("");
     setPasswordInput("");
   };
 
   async function loadProducts() {
-    const goalCheck=await supabase.from("products").select("goal").limit(1);
-    setGoalColumnAvailable(!goalCheck.error);
     setLoadingProducts(true);
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("id", { ascending: false });
-    if (!error && data) setProducts(data);
-    setLoadingProducts(false);
+    setProductError("");
+    try {
+      const { products, goalColumnAvailable } = await adminRequest("products");
+      setGoalColumnAvailable(goalColumnAvailable);
+      setProducts(products);
+    } catch {
+      setProductError("Mahsulotlarni yuklab bo‘lmadi.");
+    } finally {
+      setLoadingProducts(false);
+    }
   }
 
   async function loadOrders() {
     setLoadingOrders(true);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .order("id", { ascending: false });
-    if (!error && data) setOrders(data);
-    setLoadingOrders(false);
+    setOrderError("");
+    try {
+      const { orders } = await adminRequest("orders");
+      setOrders(orders);
+    } catch {
+      setOrderError("Buyurtmalarni yuklab bo‘lmadi.");
+    } finally {
+      setLoadingOrders(false);
+    }
   }
 
   // Formani tozalash
@@ -176,7 +215,7 @@ export default function AdminDashboard() {
   };
 
   // Tahrirlashni boshlash (ma'lumotlarni formaga joylash)
-  const handleStartEdit = (item: any) => {
+  const handleStartEdit = (item: AdminProduct) => {
     setEditingId(item.id);
     setFormData({
       title: item.title || "",
@@ -207,7 +246,7 @@ export default function AdminDashboard() {
     const payload = {
       title: formData.title,
       brand: formData.brand.trim() || "Standart",
-      ...(formData.goal || products.some((p) => "goal" in p)
+      ...(goalColumnAvailable
         ? { goal: formData.goal || null }
         : {}),
       category: formData.category,
@@ -219,48 +258,30 @@ export default function AdminDashboard() {
       image_url: formData.image_url || "/product-placeholder.svg",
     };
 
-    if (editingId) {
-      // 1. UPDATE - Mavjud tovarni yangilash
-      const { error } = await supabase
-        .from("products")
-        .update(payload)
-        .eq("id", editingId);
-
-      if (error) {
-        alert(
-          error.message.includes("goal")
-            ? "Maqsad ustuni hali bazaga qo‘shilmagan. SQL migratsiyasini bajaring."
-            : "Yangilashda xatolik: " + error.message,
-        );
-      } else {
-        alert("Mahsulot muvaffaqiyatli yangilandi!");
-        resetForm();
-        loadProducts();
-      }
-    } else {
-      // 2. INSERT - Yangi tovar qo'shish
-      const { error } = await supabase.from("products").insert([payload]);
-
-      if (error) {
-        alert("Qo‘shishda xatolik: " + error.message);
-      } else {
-        alert("Tovar muvaffaqiyatli qo‘shildi!");
-        resetForm();
-        loadProducts();
-      }
+    try {
+      await adminRequest("products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingId, product: payload }),
+      });
+      resetForm();
+      await loadProducts();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Mahsulotni saqlab bo‘lmadi.");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   // Tovarni o'chirish
-  const handleDeleteProduct = async (id: string) => {
+  const handleDeleteProduct = async (id: StoreId) => {
     if (!confirm("Haqiqatan ham bu mahsulotni o‘chirmoqchimisiz?")) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (!error) {
-      setProducts(products.filter((p) => p.id !== id));
+    try {
+      await adminRequest("products?id=" + encodeURIComponent(id), { method: "DELETE" });
+      setProducts((current) => current.filter((p) => p.id !== id));
       if (editingId === id) resetForm();
-    } else {
-      alert("O‘chirishda xatolik: " + error.message);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Mahsulotni o‘chirib bo‘lmadi.");
     }
   };
 
@@ -532,7 +553,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">
-                      Ta'mi / Ta'rif
+                      Ta’mi / Ta’rif
                     </label>
                     <input
                       type="text"
@@ -639,6 +660,8 @@ export default function AdminDashboard() {
                 <div className="p-12 text-center text-gray-400">
                   Tovarlar yuklanmoqda...
                 </div>
+              ) : productError ? (
+                <p role="alert" className="p-4 text-sm text-red-700">{productError}</p>
               ) : products.length === 0 ? (
                 <div className="p-12 text-center text-gray-400">
                   Hozircha hech qanday tovar yo‘q.
@@ -736,6 +759,8 @@ export default function AdminDashboard() {
               <div className="p-12 text-center text-gray-400">
                 Buyurtmalar yuklanmoqda...
               </div>
+            ) : orderError ? (
+              <p role="alert" className="p-4 text-sm text-red-700">{orderError}</p>
             ) : orders.length === 0 ? (
               <div className="p-12 text-center text-gray-400">
                 Hozircha yangi buyurtmalar kelib tushmadi.
@@ -801,7 +826,7 @@ export default function AdminDashboard() {
                       </p>
                       <div className="space-y-1.5">
                         {Array.isArray(order.items) &&
-                          order.items.map((prod: any, idx: number) => (
+                          order.items.map((prod, idx) => (
                             <div
                               key={idx}
                               className="flex justify-between items-center text-xs text-gray-700"

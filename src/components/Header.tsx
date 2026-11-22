@@ -19,46 +19,45 @@ export default function Header({
   onOpenCart: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const panel = useRef<HTMLDivElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
   const { t, tCategory } = useI18n();
 
   useEffect(() => {
-    const close = (e: MouseEvent) => {
-      if (!panel.current?.contains(e.target as Node)) setOpen(false);
+    if (!open) return;
+
+    const close = (event: PointerEvent) => {
+      if (!(event.target instanceof Element)) return;
+      if (
+        !menu.current?.contains(event.target) &&
+        !event.target.closest('[aria-controls="shop-catalog-menu"]')
+      ) {
+        setOpen(false);
+      }
     };
     const esc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        menuTrigger.current?.focus();
+      }
     };
-    document.addEventListener("mousedown", close);
+    document.addEventListener("pointerdown", close);
     document.addEventListener("keydown", esc);
     return () => {
-      document.removeEventListener("mousedown", close);
+      document.removeEventListener("pointerdown", close);
       document.removeEventListener("keydown", esc);
     };
-  }, []);
+  }, [open]);
 
-  useEffect(() => {
-    if (!searchQuery.trim()) return;
-    const timer = setTimeout(() => {
-      document
-        .getElementById("catalog-section")
-        ?.scrollIntoView({
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
-            .matches
-            ? "instant"
-            : "smooth",
-          block: "start",
-        });
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const toggleMenu = (button: HTMLButtonElement) => {
+    menuTrigger.current = button;
+    setOpen((current) => !current);
+  };
 
   const choose = (cat: string) => {
     setSelectedCategory(cat);
     setOpen(false);
-    document
-      .getElementById("catalog-section")
-      ?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("catalog-section")?.scrollIntoView();
   };
 
   return (
@@ -66,10 +65,12 @@ export default function Header({
       <header className="shop-header">
         <div className="container header-row">
           <button
+            type="button"
             className="mobile-menu icon-button"
             aria-label={t("catalogMenuAria")}
+            aria-controls="shop-catalog-menu"
             aria-expanded={open}
-            onClick={() => setOpen(!open)}
+            onClick={(event) => toggleMenu(event.currentTarget)}
           >
             <Menu />
           </button>
@@ -85,12 +86,15 @@ export default function Header({
           </Link>
           <form
             className="shop-search"
+            role="search"
             onSubmit={(e) => {
               e.preventDefault();
               document.getElementById("catalog-section")?.scrollIntoView();
             }}
           >
-            <Search size={20} />
+            <button type="submit" aria-label={t("searchPlaceholder")}>
+              <Search size={20} />
+            </button>
             <input
               aria-label={t("searchPlaceholder")}
               placeholder={t("searchPlaceholder")}
@@ -114,12 +118,14 @@ export default function Header({
           <CartButton onOpen={onOpenCart} />
         </div>
       </header>
-      <div ref={panel} className="shop-nav">
+      <div className="shop-nav">
         <nav className="container">
           <button
+            type="button"
             className="catalog-button"
+            aria-controls="shop-catalog-menu"
             aria-expanded={open}
-            onClick={() => setOpen(!open)}
+            onClick={(event) => toggleMenu(event.currentTarget)}
           >
             <Menu size={20} /> {t("catalog")}
           </button>
@@ -136,18 +142,21 @@ export default function Header({
           <a href="#delivery">{t("delivery")}</a>
           <span className="nav-note">{t("navSlogan")}</span>
         </nav>
-        {open && (
-          <div className="catalog-menu container">
-            <div>
-              {CATEGORIES.map((cat) => (
-                <button key={cat.id} onClick={() => choose(cat.name)}>
-                  {tCategory(cat.name)}
-                  <ArrowRight size={16} />
-                </button>
-              ))}
-            </div>
+        <div
+          ref={menu}
+          id="shop-catalog-menu"
+          className="catalog-menu container"
+          hidden={!open}
+        >
+          <div>
+            {CATEGORIES.map((cat) => (
+              <button key={cat.id} onClick={() => choose(cat.name)}>
+                {tCategory(cat.name)}
+                <ArrowRight size={16} />
+              </button>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </>
   );

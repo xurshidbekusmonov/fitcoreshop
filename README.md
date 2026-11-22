@@ -34,3 +34,23 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+### Deploying the admin and checkout changes
+
+Set `ADMIN_LOGIN`, `ADMIN_PASSWORD`, and `SUPABASE_SECRET_KEY` as server-only
+environment variables in the target Vercel environment. Keep the existing public
+Supabase URL and anon key for the catalog and the existing Telegram settings for
+notifications. Rotate the admin password and remove the old
+`NEXT_PUBLIC_ADMIN_LOGIN` and `NEXT_PUBLIC_ADMIN_PASSWORD` variables.
+
+1. Apply [the order request ID migration](supabase/migrations/20261122100118_prepare_server_orders.sql).
+2. Deploy the application and verify admin login, catalog visibility, and checkout.
+3. Apply [the table permissions migration](supabase/migrations/20261122100120_restrict_store_table_access.sql).
+   Verify the catalog still loads and admin actions still work. Check the table
+   grants and RLS policies using database metadata.
+
+The permissions migration should follow the application deployment because the
+previous storefront and admin build access these tables directly.
+
+Run `npm run build` and then `npm run test:orders` to check the order API with
+a local HTTP database stub and synthetic data.
