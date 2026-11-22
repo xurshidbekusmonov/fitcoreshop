@@ -20,56 +20,71 @@ export default function Header({
 }) {
   const [open, setOpen] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t, tCategory } = useI18n();
 
   useEffect(() => {
-    const close = (e: MouseEvent) => {
-      if (!panel.current?.contains(e.target as Node)) setOpen(false);
+    if (!open) return;
+    const close = (e: PointerEvent) => {
+      if (!(e.target instanceof Element)) return;
+      if (!panel.current?.contains(e.target) && !e.target.closest('[aria-controls="shop-catalog-menu"]')) {
+        setOpen(false);
+      }
     };
     const esc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        trigger.current?.focus();
+      }
     };
-    document.addEventListener("mousedown", close);
+    document.addEventListener("pointerdown", close);
     document.addEventListener("keydown", esc);
     return () => {
-      document.removeEventListener("mousedown", close);
+      document.removeEventListener("pointerdown", close);
       document.removeEventListener("keydown", esc);
     };
+  }, [open]);
+
+  useEffect(() => () => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
   }, []);
 
-  useEffect(() => {
-    if (!searchQuery.trim()) return;
-    const timer = setTimeout(() => {
-      document
-        .getElementById("catalog-section")
-        ?.scrollIntoView({
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
-            .matches
-            ? "instant"
-            : "smooth",
-          block: "start",
-        });
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const scrollToResults = () => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    document.getElementById("catalog-section")?.scrollIntoView();
+  };
+
+  const handleSearch = (query: string) => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    setOpen(false);
+    setSearchQuery(query);
+    if (query.trim()) searchTimer.current = setTimeout(scrollToResults, 300);
+  };
+
+  const toggleMenu = (button: HTMLButtonElement) => {
+    trigger.current = button;
+    setOpen((current) => !current);
+  };
 
   const choose = (cat: string) => {
     setSelectedCategory(cat);
     setOpen(false);
-    document
-      .getElementById("catalog-section")
-      ?.scrollIntoView({ behavior: "smooth" });
+    scrollToResults();
   };
 
   return (
-    <>
+    <div className="shop-top">
       <header className="shop-header">
         <div className="container header-row">
           <button
+            type="button"
             className="mobile-menu icon-button"
             aria-label={t("catalogMenuAria")}
             aria-expanded={open}
-            onClick={() => setOpen(!open)}
+            aria-controls="shop-catalog-menu"
+            onClick={(event) => toggleMenu(event.currentTarget)}
           >
             <Menu />
           </button>
@@ -78,30 +93,39 @@ export default function Header({
             href="/"
             onClick={() => {
               setSelectedCategory("Barchasi");
-              setSearchQuery("");
+              handleSearch("");
             }}
           >
             FITCORE<span>SHOP</span>
           </Link>
           <form
             className="shop-search"
+            role="search"
             onSubmit={(e) => {
               e.preventDefault();
-              document.getElementById("catalog-section")?.scrollIntoView();
+              scrollToResults();
             }}
           >
-            <Search size={20} />
+            <button type="submit" aria-label={t("searchPlaceholder")}>
+              <Search size={20} />
+            </button>
             <input
+              ref={searchInput}
               aria-label={t("searchPlaceholder")}
               placeholder={t("searchPlaceholder")}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setOpen(false)}
+              onChange={(e) => handleSearch(e.target.value)}
             />
             {searchQuery && (
               <button
                 aria-label={t("clearSearch")}
                 type="button"
-                onClick={() => setSearchQuery("")}
+                onClick={() => {
+                  handleSearch("");
+                  searchInput.current?.focus({ preventScroll: true });
+                  requestAnimationFrame(scrollToResults);
+                }}
               >
                 <X size={18} />
               </button>
@@ -114,12 +138,14 @@ export default function Header({
           <CartButton onOpen={onOpenCart} />
         </div>
       </header>
-      <div ref={panel} className="shop-nav">
+      <div className="shop-nav">
         <nav className="container">
           <button
+            type="button"
             className="catalog-button"
             aria-expanded={open}
-            onClick={() => setOpen(!open)}
+            aria-controls="shop-catalog-menu"
+            onClick={(event) => toggleMenu(event.currentTarget)}
           >
             <Menu size={20} /> {t("catalog")}
           </button>
@@ -136,19 +162,18 @@ export default function Header({
           <a href="#delivery">{t("delivery")}</a>
           <span className="nav-note">{t("navSlogan")}</span>
         </nav>
-        {open && (
-          <div className="catalog-menu container">
-            <div>
-              {CATEGORIES.map((cat) => (
-                <button key={cat.id} onClick={() => choose(cat.name)}>
-                  {tCategory(cat.name)}
-                  <ArrowRight size={16} />
-                </button>
-              ))}
-            </div>
+        <div ref={panel} id="shop-catalog-menu" className="catalog-menu container" hidden={!open}>
+          <div>
+            {CATEGORIES.map((cat) => (
+              <button key={cat.id} onClick={() => choose(cat.name)}>
+                {tCategory(cat.name)}
+                <ArrowRight size={16} />
+              </button>
+            ))}
+            <Link className="mobile-admin-link" href="/admin">{t("admin")}</Link>
           </div>
-        )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }

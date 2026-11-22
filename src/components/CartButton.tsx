@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/lib/cartStore';
 import { useI18n } from '@/lib/useI18n';
 
+const subscribe = () => () => {};
+
 export default function CartButton({ onOpen }: { onOpen: () => void }) {
   const items = useCartStore((state) => state.items);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
   const { t } = useI18n();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const totalQuantity = mounted
     ? items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
@@ -20,6 +18,8 @@ export default function CartButton({ onOpen }: { onOpen: () => void }) {
 
   return (
     <button
+      type="button"
+      aria-label={totalQuantity ? t("cart") + " (" + totalQuantity + ")" : t("cart")}
       onClick={onOpen}
       className="relative flex items-center gap-2 bg-[#D4AF37] hover:bg-[#C59B27] text-black px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 shadow-md active:scale-95 cursor-pointer"
     >

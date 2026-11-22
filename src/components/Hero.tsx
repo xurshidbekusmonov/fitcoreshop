@@ -27,7 +27,6 @@ export default function Hero({
             <br />
             <span>{t("heroTitleLine2")}</span>
           </h1>
-          <p>{t("heroSubtitle")}</p>
           <button className="primary-action" onClick={onScrollToCatalog}>
             {t("viewCatalog")} <ArrowRight size={19} />
           </button>

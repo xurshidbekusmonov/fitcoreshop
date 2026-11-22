@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState, useRef } from "react";
-import { ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import { useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
+import { ArrowRight, Dumbbell, Package, Pill, SlidersHorizontal, X, Zap } from "lucide-react";
 import { useDialog } from "@/lib/useDialog";
 import { PRODUCT_GOALS, productGoal } from "@/lib/productGoals";
 import { supabase } from "@/lib/supabase";
@@ -11,6 +11,7 @@ import ProductCard, { Product } from "@/components/ProductCard";
 import CartDrawer from "@/components/CartDrawer";
 import CheckoutModal from "@/components/CheckoutModal";
 import { useI18n } from "@/lib/useI18n";
+import { catalogMatches } from "@/lib/catalogSearch";
 
 const goals = [
   ["Mushak o‘stirish", "Proteinlar"],
@@ -18,6 +19,39 @@ const goals = [
   ["Mashq va tiklanish", "Kreatin"],
   ["Kundalik salomatlik", "Vitaminlar"],
 ];
+
+const quickCategories = [
+  { name: "Proteinlar", Icon: Package },
+  { name: "Kreatin", Icon: Zap },
+  { name: "Vitaminlar", Icon: Pill },
+  { name: "Geynerlar", Icon: Dumbbell },
+];
+const catalogPositionKey = "fitcore-catalog-position-v1";
+
+type CatalogPosition = {
+  selectedCategory: string;
+  selectedGoal: string;
+  searchQuery: string;
+  visibleCount: number;
+  brand: string;
+  min: string;
+  max: string;
+  sort: string;
+  sales: boolean;
+  available: boolean;
+  scrollY: number;
+};
+
+function readCatalogPosition(): CatalogPosition | null {
+  try {
+    const saved = sessionStorage.getItem(catalogPositionKey);
+    if (!saved) return null;
+    sessionStorage.removeItem(catalogPositionKey);
+    return JSON.parse(saved);
+  } catch {
+    return null;
+  }
+}
 
 export default function Home() {
   const { t, tCategory, tGoal } = useI18n();
@@ -41,6 +75,7 @@ export default function Home() {
   const filterRef = useRef<HTMLDivElement>(null);
   useDialog(filterOpen, () => setFilterOpen(false), filterRef);
   const [selectedGoal, setSelectedGoal] = useState("");
+  const [restoreScroll, setRestoreScroll] = useState<number | null>(null);
   const [showBrands, setShowBrands] = useState(false);
   const [draft, setDraft] = useState({
     category: "Barchasi",
@@ -58,14 +93,47 @@ export default function Home() {
       .select("*")
       .then(({ data, error }) => {
         if (!active) return;
-        if (error) setError(true);
-        else setProducts(data || []);
+        if (error) {
+          setError(true);
+        } else {
+          const saved = readCatalogPosition();
+          if (saved) {
+            setSelectedCategory(saved.selectedCategory);
+            setSelectedGoal(saved.selectedGoal);
+            setSearchQuery(saved.searchQuery);
+            setVisibleCount(saved.visibleCount);
+            setBrand(saved.brand);
+            setMin(saved.min);
+            setMax(saved.max);
+            setSort(saved.sort);
+            setSales(saved.sales);
+            setAvailable(saved.available);
+            setRestoreScroll(saved.scrollY);
+          }
+          setProducts(data || []);
+        }
         setLoading(false);
       });
     return () => {
       active = false;
     };
   }, [retry]);
+
+  useLayoutEffect(() => {
+    if (restoreScroll !== null) window.scrollTo({ top: restoreScroll, behavior: "instant" });
+  }, [restoreScroll]);
+
+  const rememberCatalog = () => {
+    const position: CatalogPosition = {
+      selectedCategory, selectedGoal, searchQuery, visibleCount, brand, min, max,
+      sort, sales, available, scrollY: window.scrollY,
+    };
+    try {
+      sessionStorage.setItem(catalogPositionKey, JSON.stringify(position));
+    } catch {
+      // Navigation still works when storage is disabled.
+    }
+  };
 
   useEffect(() => {
     const show = () => setSales(true);
@@ -96,9 +164,10 @@ export default function Home() {
         (!max || Number(p.price) <= Number(max)) &&
         (!sales || Number(p.old_price) > Number(p.price)) &&
         (!available || (p.stock !== 0 && p.in_stock !== false)) &&
-        `${p.title} ${p.brand || ""}`
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()),
+        catalogMatches(
+          [p.title, p.brand, p.category, p.flavor].filter(Boolean).join(" "),
+          searchQuery,
+        ),
     );
     return sort === "asc"
       ? list.sort((a, b) => a.price - b.price)
@@ -121,7 +190,7 @@ export default function Home() {
   const scroll = () =>
     document
       .getElementById("catalog-section")
-      ?.scrollIntoView({ behavior: "smooth" });
+      ?.scrollIntoView();
 
   const reset = () => {
     setSelectedCategory("Barchasi");
@@ -254,6 +323,7 @@ export default function Home() {
       <Header
         searchQuery={searchQuery}
         setSearchQuery={(s) => {
+          if (!searchQuery.trim() || !s.trim()) reset();
           setSearchQuery(s);
           setVisibleCount(8);
         }}
@@ -261,49 +331,23 @@ export default function Home() {
         onOpenCart={() => setIsCartOpen(true)}
       />
       <Hero onScrollToCatalog={scroll} />
-      <Features />
-      <section className="container goals-section" id="goals">
-        <div className="section-heading">
-          <h2>{t("chooseByGoal")}</h2>
-          <button onClick={scroll}>
-            {t("allProducts")} <ArrowRight size={17} />
+      <nav className="container quick-categories" aria-label={t("catalog")}>
+        {quickCategories.map(({ name, Icon }) => (
+          <button
+            key={name}
+            type="button"
+            aria-pressed={selectedCategory === name}
+            onClick={() => {
+              reset();
+              if (selectedCategory !== name) setSelectedCategory(name);
+              scroll();
+            }}
+          >
+            <Icon size={20} aria-hidden="true" />
+            {tCategory(name)}
           </button>
-        </div>
-        <div className="goal-grid">
-          {goals.map(([title, cat]) => {
-            const p = products.find(
-              (p) =>
-                p.category === cat &&
-                p.image_url &&
-                !p.image_url.includes("unsplash"),
-            );
-            return (
-              <button
-                className="goal-card"
-                key={cat}
-                onClick={() => {
-                  selectCategory("Barchasi");
-                  setSelectedGoal(title);
-                  scroll();
-                }}
-              >
-                <span>{tGoal(title)}</span>
-                <ArrowRight size={20} />
-                {p && (
-                  <img
-                    src={p.image_url}
-                    alt=""
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.style.visibility = "hidden";
-                    }}
-                  />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </section>
+        ))}
+      </nav>
       <section className="container catalog-section" id="catalog-section">
         <div className="section-heading">
           <div>
@@ -335,7 +379,7 @@ export default function Home() {
             <SlidersHorizontal size={18} /> {t("filterBtn")}
           </button>
           <label className="sort-control">
-            <span className="sr-only">Saralash</span>
+            <span className="sr-only">{t("sortLabel")}</span>
             <select
               value={sort}
               onChange={(e) => {
@@ -419,7 +463,7 @@ export default function Home() {
               <>
                 <div className="product-grid">
                   {filtered.slice(0, visibleCount).map((p) => (
-                    <ProductCard key={p.id} item={p} />
+                    <ProductCard key={p.id} item={p} onOpen={rememberCatalog} />
                   ))}
                 </div>
                 {visibleCount < filtered.length && (
@@ -433,6 +477,49 @@ export default function Home() {
               </>
             )}
           </div>
+        </div>
+      </section>
+      <Features />
+      <section className="container goals-section" id="goals">
+        <div className="section-heading">
+          <h2>{t("chooseByGoal")}</h2>
+          <button onClick={scroll}>
+            {t("allProducts")} <ArrowRight size={17} />
+          </button>
+        </div>
+        <div className="goal-grid">
+          {goals.map(([title, cat]) => {
+            const p = products.find(
+              (p) =>
+                p.category === cat &&
+                p.image_url &&
+                !p.image_url.includes("unsplash"),
+            );
+            return (
+              <button
+                className="goal-card"
+                key={cat}
+                onClick={() => {
+                  selectCategory("Barchasi");
+                  setSelectedGoal(title);
+                  scroll();
+                }}
+              >
+                <span>{tGoal(title)}</span>
+                <ArrowRight size={20} />
+                {p && (
+                  <img
+                    src={p.image_url}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.visibility = "hidden";
+                    }}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
       </section>
       {brands.length > 0 && (

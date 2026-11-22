@@ -24,7 +24,7 @@ export type Product = {
 
 const subscribe = () => () => {};
 
-export default function ProductCard({ item }: { item: Product }) {
+export default function ProductCard({ item, onOpen }: { item: Product; onOpen?: () => void }) {
   const mounted = useSyncExternalStore(
     subscribe,
     () => true,
@@ -40,7 +40,7 @@ export default function ProductCard({ item }: { item: Product }) {
 
   return (
     <article className="product-card">
-      <Link className="product-image" href={`/product/${item.id}`}>
+      <Link className="product-image" href={`/product/${item.id}`} onNavigate={onOpen}>
         <img
           src={item.image_url || "/product-placeholder.svg"}
           alt={item.title}
@@ -54,7 +54,7 @@ export default function ProductCard({ item }: { item: Product }) {
         {item.badge && <span className="product-badge">{item.badge}</span>}
       </Link>
       <div className="product-brand">{item.brand}</div>
-      <Link href={`/product/${item.id}`}>
+      <Link href={`/product/${item.id}`} onNavigate={onOpen}>
         <h3>{item.title}</h3>
       </Link>
       <p className="product-variant">

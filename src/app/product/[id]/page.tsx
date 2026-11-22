@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, use, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useCartStore } from '@/lib/cartStore';
@@ -8,30 +8,34 @@ import { ArrowLeft, ShoppingCart, ShieldCheck, Truck, RotateCcw, Plus, Minus } f
 import { formatPrice } from '@/lib/formatPrice';
 import { useI18n } from '@/lib/useI18n';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import CartButton from '@/components/CartButton';
+import CartDrawer from '@/components/CartDrawer';
+import CheckoutModal from '@/components/CheckoutModal';
+import type { Product } from '@/components/ProductCard';
+
+const subscribe = () => () => {};
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const productId = resolvedParams.id;
 
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { t, tCategory } = useI18n();
 
   const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const cartItem = mounted ? items.find((i) => i.id === productId) : null;
   const quantity = cartItem ? cartItem.quantity : 0;
 
   useEffect(() => {
     async function fetchProduct() {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('products')
         .select('*')
         .eq('id', productId)
@@ -69,27 +73,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="detail-page min-h-screen bg-gray-50 text-gray-800">
-      <header className="bg-white border-b py-4 px-6 shadow-xs sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-blue-600 transition">
-            <ArrowLeft size={18} /> {t("back")}
+      <header className="detail-header bg-white border-b sticky top-0 z-20">
+        <div className="detail-header-row max-w-6xl mx-auto">
+          <Link href="/" scroll={false} aria-label={t("back")} className="detail-back">
+            <ArrowLeft size={20} /> <span>{t("back")}</span>
           </Link>
           <span className="text-xl font-black text-blue-600">
             FITCORE<span className="text-orange-500">SHOP</span>
           </span>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <Link href="/" className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-medium text-gray-700">
-              {t("shop")}
-            </Link>
-          </div>
+          <LanguageSwitcher />
+          <CartButton onOpen={() => setCartOpen(true)} />
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-10">
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-10 shadow-xs">
+      <main className="detail-content max-w-6xl mx-auto px-4 py-10">
+        <div className="detail-card bg-white rounded-2xl border border-gray-200 p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-10 shadow-xs">
           {/* Rasm qismi */}
-          <div className="flex items-center justify-center bg-gray-50 rounded-xl p-8 border border-gray-100">
+          <div className="detail-image flex items-center justify-center bg-gray-50 rounded-xl p-8 border border-gray-100">
             <img
               src={product.image_url || '/product-placeholder.svg'}
               onError={e=>{e.currentTarget.src='/product-placeholder.svg'}}
@@ -122,7 +122,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </h1>
 
               {/* Narx */}
-              <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="detail-price mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
                 {Number(product.old_price) > Number(product.price) && (
                   <span className="text-sm text-gray-400 line-through block">
                     {formatPrice(product.old_price)} {t("currency")}
@@ -153,7 +153,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Savatchaga qo'shish yoki [-] soni [+] */}
-            <div>
+            <div className="detail-purchase">
+              <strong className="detail-mobile-price">{formatPrice(product.price)} {t("currency")}</strong>
               {quantity > 0 ? (
                 <div className="w-full flex items-center justify-between bg-blue-50 border-2 border-blue-600 rounded-xl p-2 shadow-xs">
                   <button
@@ -204,6 +205,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </main>
+      <CartDrawer
+        isOpen={cartOpen}
+        onClose={() => setCartOpen(false)}
+        onCheckout={() => {
+          setCartOpen(false);
+          setCheckoutOpen(true);
+        }}
+      />
+      <CheckoutModal isOpen={checkoutOpen} onClose={() => setCheckoutOpen(false)} />
     </div>
   );
 }
