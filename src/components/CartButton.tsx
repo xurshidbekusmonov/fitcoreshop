@@ -28,10 +28,8 @@ export default function CartButton({ onOpen }: { onOpen: () => void }) {
       </div>
       <span className="hidden sm:inline">{t("cart")}</span>
 
-      {/* Savatchaga tovar qo'shilsa yuqorisida qizil belgicha (soni bilan) */}
       {totalQuantity > 0 && (
         <span className="absolute -top-2.5 -right-2.5 z-20 flex items-center justify-center">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
           <span className="relative inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-600 text-white text-[11px] font-black border-2 border-black shadow-lg shadow-red-600/60 leading-none">
             {totalQuantity}
           </span>

@@ -179,10 +179,8 @@ select:focus-visible {
   font-weight: 600;
   letter-spacing: 0;
 }
-.header-row > button:last-child .animate-ping {
-  display: none;
-}
-.header-row > button:last-child span.relative {
+.header-row > button:last-child span.relative,
+.detail-header-row > button:last-child span.relative {
   background: var(--text-primary);
   border: 2px solid white;
   box-shadow: none;
